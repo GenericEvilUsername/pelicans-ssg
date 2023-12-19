@@ -4,11 +4,11 @@ const Seasons = ({ seasons }) => {
   return (
     <ul>
       {seasons.map(season => (
-        <ul>
+        <li key={season.season_id}>
           <Link href={`/seasons/${season.season_id}`}>
             {season.season_id} {season.teamname}
           </Link>
-        </ul>
+        </li>
       ))}
     </ul>
   );
