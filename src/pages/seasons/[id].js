@@ -83,14 +83,113 @@ const Games = ({ games }) => {
   );
 };
 
-const Season = ({ season }) => {
-  const { games } = season;
+const Tables = ({ tables }) => {
   return (
-    <Row>
-      <Col md={12}>
-        <Games games={games} />
-      </Col>
-    </Row>
+    <Table>
+      <thead>
+        <tr>
+          <th></th>
+          {["O", "V", "T", "H", "TM", "PM", "PTS", "LP"].map(th => (
+            <th key={th}>{th}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {tables.map(table => (
+          <tr key={table.team_id} className={table.team_id === 999 ? "own" : ""}>
+            <td>{table.name}</td>
+            <td>{table.games}</td>
+            <td>{table.won}</td>
+            <td>{table.ties}</td>
+            <td>{table.lost}</td>
+            <td>{table.gf}</td>
+            <td>{table.ga}</td>
+            <td>{table.pts}</td>
+            <td>{table.bonus_points || "-"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </Table>
+  );
+};
+
+const Stats = ({ stats }) => {
+  return (
+    <Table>
+      <thead>
+        <tr>
+          {[
+            "#",
+            "Pelaaja",
+            "O",
+            "M",
+            "S",
+            "P",
+            "+",
+            "-",
+            "+/-",
+            "JM",
+            "VM",
+            "YV",
+            "AV",
+            "L",
+            "LP"
+          ].map(th => (
+            <th key={th}>{th}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {stats.map(stat => (
+          <tr key={stat.player_id}>
+            <td>{stat.jersey_numbers}</td>
+            <td>
+              {stat.player.lastname} {stat.player.firstname}
+            </td>
+            {[
+              "gp",
+              "goals",
+              "assists",
+              "points",
+              "plus",
+              "minus",
+              "pm_diff",
+              "pim",
+              "gwg",
+              "ppg",
+              "shg",
+              "shots"
+            ].map(td => (
+              <td key={td}>{stat[td]}</td>
+            ))}
+            <td>{stat.shots != 0 ? (100 * (stat.goals / stat.shots)).toFixed(2) : "-"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </Table>
+  );
+};
+
+const Season = ({ season }) => {
+  const { games, tables, season_stats: stats } = season;
+  return (
+    <>
+      <Row>
+        <Col md={12}>
+          <Tables tables={tables} />
+        </Col>
+      </Row>
+      <Row>
+        <Col md={12}>
+          <Games games={games} />
+        </Col>
+      </Row>
+      <Row>
+        <Col md={12}>
+          <Stats stats={stats} />
+        </Col>
+      </Row>
+    </>
   );
 };
 export default Season;

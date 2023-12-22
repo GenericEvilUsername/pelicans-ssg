@@ -1,7 +1,15 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
 table .numeric {
   text-align: right;
 }
 table .legend {
   font-style: italic;
   font-size: 0.8em;
+}
+
+table .own td {
+  background-color: lightgray;
 }
