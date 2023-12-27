@@ -144,7 +144,9 @@ const Stats = ({ stats }) => {
           <tr key={stat.player_id}>
             <td>{stat.jersey_numbers}</td>
             <td>
-              {stat.player.lastname} {stat.player.firstname}
+              <Link href={`/players/${stat.player_id}`}>
+                {stat.player.lastname} {stat.player.firstname}
+              </Link>
             </td>
             {[
               "gp",
