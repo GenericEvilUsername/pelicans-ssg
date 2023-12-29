@@ -4,7 +4,8 @@ import Col from "react-bootstrap/Col";
 import Table from "react-bootstrap/Table";
 
 import { formatDate } from "../_app";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Form } from "react-bootstrap";
 
 export async function getStaticProps(context) {
   const { id } = context.params;
@@ -51,6 +52,7 @@ const Games = ({ games }) => {
       <Table>
         <thead>
           <tr>
+            <th>#</th>
             <th>Pvm</th>
             <th>Ottelu</th>
             <th>Tulos</th>
@@ -65,6 +67,7 @@ const Games = ({ games }) => {
             updateProgress(game);
             return (
               <tr key={game.id}>
+                <td>{game.orderno}</td>
                 <td>
                   <Link href={`/games/${game.id}`}>{formatDate(game.gamedate)}</Link>
                 </td>
@@ -113,67 +116,151 @@ const Tables = ({ tables }) => {
   );
 };
 
-const Stats = ({ stats }) => {
+const Stats = ({ stats, games, game_logs }) => {
+  const [start_filter, setStartFilter] = useState(null),
+    [end_filter, setEndFilter] = useState(null),
+    [filtered_stats, setFilteredStats] = useState([]);
+
+  useEffect(() => {
+    if (start_filter === null && end_filter === null) setFilteredStats(stats);
+    else {
+      const logs = game_logs.filter(
+        l => l.orderno >= (start_filter || 0) && l.orderno <= (end_filter || 100)
+      );
+      const filtered_stats = logs.reduce((filtered, l) => {
+        const stats = (filtered[l.player_id] ??= {
+          gp: 0,
+          goals: 0,
+          assists: 0,
+          points: 0,
+          plus: 0,
+          minus: 0,
+          pm_diff: 0,
+          pim: 0,
+          gwg: 0,
+          ppg: 0,
+          shg: 0,
+          shots: 0,
+          jersey_numbers: "",
+          player: l.player
+        });
+
+        stats.gp++;
+        stats.goals += l.ma;
+        stats.assists += l.sy;
+        stats.points += l.pi;
+        stats.plus += l.pl;
+        stats.minus += l.mi;
+        stats.pm_diff += l.pm;
+        stats.pim += l.ra;
+        stats.gwg += l.vm;
+        stats.ppg += l.yv;
+        stats.shg += l.av;
+        stats.shots += l.la;
+
+        const numbers = stats.jersey_numbers.split(" ");
+        if (!numbers.includes((l.jerseynro || "").toString())) {
+          numbers.push(l.jerseynro);
+          stats.jersey_numbers = numbers.join(" ");
+        }
+
+        return filtered;
+      }, {});
+      setFilteredStats(Object.values(filtered_stats));
+    }
+  }, [stats, start_filter, end_filter]);
   return (
-    <Table>
-      <thead>
-        <tr>
-          {[
-            "#",
-            "Pelaaja",
-            "O",
-            "M",
-            "S",
-            "P",
-            "+",
-            "-",
-            "+/-",
-            "JM",
-            "VM",
-            "YV",
-            "AV",
-            "L",
-            "LP"
-          ].map(th => (
-            <th key={th}>{th}</th>
+    <>
+      <Form.Group>
+        <Form.Label>Alku</Form.Label>
+        <Form.Control
+          as="select"
+          value={start_filter || ""}
+          onChange={e => setStartFilter(parseInt(e.target.value) || null)}
+        >
+          <option value="" />
+          {games.map(g => (
+            <option key={g.id} value={g.orderno}>
+              {g.orderno} / {g.gamedate} {g.matchup}
+            </option>
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {stats.map(stat => (
-          <tr key={stat.player_id}>
-            <td>{stat.jersey_numbers}</td>
-            <td>
-              <Link href={`/players/${stat.player_id}`}>
-                {stat.player.lastname} {stat.player.firstname}
-              </Link>
-            </td>
+        </Form.Control>
+      </Form.Group>
+      <Form.Group>
+        <Form.Label>Loppu</Form.Label>
+        <Form.Control
+          as="select"
+          value={end_filter || ""}
+          onChange={e => setEndFilter(parseInt(e.target.value) || null)}
+        >
+          <option value="" />
+          {games.map(g => (
+            <option key={g.id} value={g.orderno}>
+              {g.orderno} / {g.gamedate} {g.matchup}
+            </option>
+          ))}
+        </Form.Control>
+      </Form.Group>
+      <Table>
+        <thead>
+          <tr>
             {[
-              "gp",
-              "goals",
-              "assists",
-              "points",
-              "plus",
-              "minus",
-              "pm_diff",
-              "pim",
-              "gwg",
-              "ppg",
-              "shg",
-              "shots"
-            ].map(td => (
-              <td key={td}>{stat[td]}</td>
+              "#",
+              "Pelaaja",
+              "O",
+              "M",
+              "S",
+              "P",
+              "+",
+              "-",
+              "+/-",
+              "JM",
+              "VM",
+              "YV",
+              "AV",
+              "L",
+              "LP"
+            ].map(th => (
+              <th key={th}>{th}</th>
             ))}
-            <td>{stat.shots != 0 ? (100 * (stat.goals / stat.shots)).toFixed(2) : "-"}</td>
           </tr>
-        ))}
-      </tbody>
-    </Table>
+        </thead>
+        <tbody>
+          {filtered_stats.map(stat => (
+            <tr key={stat.player_id}>
+              <td>{stat.jersey_numbers}</td>
+              <td>
+                <Link href={`/players/${stat.player_id}`}>
+                  {stat.player.lastname} {stat.player.firstname}
+                </Link>
+              </td>
+              {[
+                "gp",
+                "goals",
+                "assists",
+                "points",
+                "plus",
+                "minus",
+                "pm_diff",
+                "pim",
+                "gwg",
+                "ppg",
+                "shg",
+                "shots"
+              ].map(td => (
+                <td key={td}>{stat[td]}</td>
+              ))}
+              <td>{stat.shots != 0 ? (100 * (stat.goals / stat.shots)).toFixed(2) : "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </>
   );
 };
 
 const Season = ({ season }) => {
-  const { games, tables, season_stats: stats } = season;
+  const { games, tables, season_stats: stats, game_logs } = season;
   return (
     <>
       <Row>
@@ -188,7 +275,7 @@ const Season = ({ season }) => {
       </Row>
       <Row>
         <Col md={12}>
-          <Stats stats={stats} />
+          <Stats stats={stats} games={games} game_logs={game_logs} />
         </Col>
       </Row>
     </>
