@@ -166,7 +166,12 @@ const Stats = ({ stats, games, game_logs }) => {
 
         return filtered;
       }, {});
-      setFilteredStats(Object.values(filtered_stats));
+      setFilteredStats(
+        Object.values(filtered_stats).sort((a, b) => {
+          if (a.points > b.points) return -1;
+          return a.points < b.points ? 1 : 0;
+        })
+      );
     }
   }, [stats, start_filter, end_filter]);
   return (
