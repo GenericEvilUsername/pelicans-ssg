@@ -4,7 +4,7 @@ import Col from "react-bootstrap/Col";
 import Table from "react-bootstrap/Table";
 
 import { formatDate } from "../_app";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
 
 export async function getStaticProps(context) {
@@ -72,7 +72,9 @@ const Games = ({ games }) => {
                   <Link href={`/games/${game.id}`}>{formatDate(game.gamedate)}</Link>
                 </td>
                 <td>{game.matchup}</td>
-                <td>{game.score}</td>
+                <td>
+                  {game.score} {!game.overtime || "JA"}
+                </td>
                 <td>{game.attendance}</td>
                 {["O", "V", "T", "H", "TM", "PM", "P"].map(attr => (
                   <td key={attr}>{progress[attr]}</td>
@@ -118,11 +120,10 @@ const Tables = ({ tables }) => {
 
 const Stats = ({ stats, games, game_logs }) => {
   const [start_filter, setStartFilter] = useState(null),
-    [end_filter, setEndFilter] = useState(null),
-    [filtered_stats, setFilteredStats] = useState([]);
+    [end_filter, setEndFilter] = useState(null);
 
-  useEffect(() => {
-    if (start_filter === null && end_filter === null) setFilteredStats(stats);
+  const filtered_stats = useMemo(() => {
+    if (start_filter === null && end_filter === null) return stats;
     else {
       const logs = game_logs.filter(
         l => l.orderno >= (start_filter || 0) && l.orderno <= (end_filter || 100)
@@ -166,12 +167,11 @@ const Stats = ({ stats, games, game_logs }) => {
 
         return filtered;
       }, {});
-      setFilteredStats(
-        Object.values(filtered_stats).sort((a, b) => {
-          if (a.points > b.points) return -1;
-          return a.points < b.points ? 1 : 0;
-        })
-      );
+
+      return Object.values(filtered_stats).sort((a, b) => {
+        if (a.points > b.points) return -1;
+        return a.points < b.points ? 1 : 0;
+      });
     }
   }, [stats, start_filter, end_filter]);
   return (
