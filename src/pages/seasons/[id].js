@@ -73,14 +73,9 @@ const Games = ({ games }) => {
                   <Link href={`/games/${game.id}`}>{formatDate(game.gamedate)}</Link>
                 </td>
                 <td>{game.matchup}</td>
-<<<<<<< HEAD
                 <td>
                   {game.score} {!game.overtime || "JA"}
                 </td>
-=======
-                <td>{game.score}</td>
-                <td>{!game.overtime || "JA"}</td>
->>>>>>> 3c5424b37a0e3a04bc52398e585866d6c4ad92c6
                 <td>{game.attendance}</td>
                 {["O", "V", "T", "H", "TM", "PM", "P"].map(attr => (
                   <td key={attr}>{progress[attr]}</td>
