@@ -56,6 +56,7 @@ const Games = ({ games }) => {
             <th>Pvm</th>
             <th>Ottelu</th>
             <th>Tulos</th>
+            <th></th>
             <th>Yleisö</th>
             {["O", "V", "T", "H", "TM", "PM", "PTS"].map(attr => (
               <th key={attr}>{attr}</th>
@@ -73,6 +74,7 @@ const Games = ({ games }) => {
                 </td>
                 <td>{game.matchup}</td>
                 <td>{game.score}</td>
+                <td>{!game.overtime || "JA"}</td>
                 <td>{game.attendance}</td>
                 {["O", "V", "T", "H", "TM", "PM", "P"].map(attr => (
                   <td key={attr}>{progress[attr]}</td>
