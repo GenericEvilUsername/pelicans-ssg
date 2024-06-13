@@ -27,24 +27,63 @@ export async function getStaticPaths() {
   };
 }
 
-const Games = ({ games }) => {
-  const progress = { O: 0, V: 0, H: 0, T: 0, TM: 0, PM: 0, P: 0, LP: null };
+const Outcomes = {
+  WIN: 1,
+  LOSS: 2,
+  TIE: 3,
+  OTW: 4,
+  OTL: 5
+}
+
+const OutcomeIndicator = ({ outcome }) => {
+  let background = "#d4edda";
+  let title = "Voitto";
+  if(Outcomes.LOSS === outcome) [background, title] = ["#f8d7da", "Tappio"];
+  else if(Outcomes.TIE === outcome) [background, title] = ["#e2e3e5", "Tasapeli"];
+  else if(Outcomes.OTW === outcome) [background, title] = ["#d1ecf1", "Voitto jatkoajalla tai voittomaalikilpailussa"];
+  else if(Outcomes.OTL === outcome) [background, title] = ["#fff3cd", "Tappio jatkoajalla tai voittomaalikilpailussa"];
+
+  return <div title={title} style={{ background, borderRadius: "50%", width: "16px", height: "16px" }} />
+}
+
+const Games = ({ season, games }) => {
+  const progress = { O: 0, V: 0, H: 0, T: 0, LP: 0, TM: 0, PM: 0, P: 0 }, { ol, ow, rw } = season;
 
   const updateProgress = game => {
-    console.log(game, JSON.stringify(progress.current));
+    let outcome = null;
     if (game.pel_score > game.opp_score) {
-      progress.V++;
-      progress.P += 2;
+      if (game.overtime && rw !== ow) {
+        progress.LP++;
+        progress.T++;
+        outcome = Outcomes.OTW;
+      }
+      else { outcome = Outcomes.WIN; progress.V++; }
+      progress.P += game.overtime ? ow : rw;
     } else if (game.pel_score === game.opp_score) {
       progress.T++;
       progress.P += 1;
-    } else progress.H++;
+      outcome = Outcomes.TIE;
+    } else {
+      if (game.overtime && rw !== ow) {
+        progress.P += ol;
+        progress.T++;
+        outcome = Outcomes.OTL;
+      }
+      else {
+        progress.H++;
+        outcome = Outcomes.LOSS;
+      }
+    }
 
     progress.TM += game.pel_score;
     progress.PM += game.opp_score;
 
     progress.O++;
+    return outcome;
   };
+
+  const [headers, keys] = ol > 0 ? [["O", "V", "T", "H", "LP", "TM", "PM", "PTS"], ["O", "V", "T", "H", "LP", "TM", "PM", "P"]] :
+    [["O", "V", "T", "H", "TM", "PM", "PTS"], ["O", "V", "T", "H", "TM", "PM", "P"]]
 
   return (
     <>
@@ -54,30 +93,32 @@ const Games = ({ games }) => {
           <tr>
             <th>#</th>
             <th>Pvm</th>
+            <th />
             <th>Ottelu</th>
             <th>Tulos</th>
-            <th></th>
+
             <th>Yleisö</th>
-            {["O", "V", "T", "H", "TM", "PM", "PTS"].map(attr => (
+            {headers.map(attr => (
               <th key={attr}>{attr}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {games.map(game => {
-            updateProgress(game);
+            const outcome = updateProgress(game);
             return (
               <tr key={game.id}>
                 <td>{game.orderno}</td>
                 <td>
                   <Link href={`/games/${game.id}`}>{formatDate(game.gamedate)}</Link>
                 </td>
+                <td><OutcomeIndicator outcome={outcome} /></td>
                 <td>{game.matchup}</td>
                 <td>
                   {game.score} {!game.overtime || "JA"}
                 </td>
                 <td>{game.attendance}</td>
-                {["O", "V", "T", "H", "TM", "PM", "P"].map(attr => (
+                {keys.map(attr => (
                   <td key={attr}>{progress[attr]}</td>
                 ))}
               </tr>
@@ -276,7 +317,7 @@ const Season = ({ season }) => {
       </Row>
       <Row>
         <Col md={12}>
-          <Games games={games} />
+          <Games season={season} games={games} />
         </Col>
       </Row>
       <Row>
